@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends
 from enum import Enum
 from pyIslam.praytimes import PrayerConf, Prayer, LIST_FAJR_ISHA_METHODS
 from datetime import date, datetime
+import pytz
 
 app = FastAPI()
 
@@ -33,6 +34,7 @@ class Methods(str, Enum):
     eight = 8
     nine = 9
 
+
 Methods.__doc__ = "".join(
     [
         ("- " + str(item.id) + ": " + ", ".join(item.organizations) + "\n")
@@ -52,34 +54,42 @@ class AsrModel(str, Enum):
 
 
 asr_fiqh_map = {AsrModel.jomhor: 1, AsrModel.hanafi: 2}
-# for cayman islands
-# latitude = 19.290800
-# longitude = -81.374417
-# timezone = -5
-# fajr_isha_method = 1
-# asr_fiqh = 1
+
+Timezone = Enum("Timezone", {t: t for t in pytz.common_timezones})
 
 
 def get_pt(
-    longitude: float,
-    latitude: float,
-    utc_offset: int,
+    timezone: Timezone = "EST",
+    longitude: float = -81.374417,
+    latitude: float = 19.290800,
     fajr_isha_method: Methods = Methods.one,
-    asr_fiqh: AsrModel = AsrModel.hanafi,
+    asr_fiqh: AsrModel = AsrModel.jomhor,
 ) -> Prayer:
+    now = datetime.now(pytz.timezone(timezone.value))
+    hours = now.utcoffset().total_seconds() / 60 / 60
     prayer_conf = PrayerConf(
-        longitude, latitude, utc_offset, int(fajr_isha_method.value), asr_fiqh_map[asr_fiqh]
+        longitude,
+        latitude,
+        hours,
+        int(fajr_isha_method.value),
+        asr_fiqh_map[asr_fiqh],
     )
     return Prayer(prayer_conf, date.today())
 
 
 def is_prayer_time_close(
-    name: PrayerName=None, prayer: Prayer = Depends(get_pt), threshold: float = 1.5
+    timezone: Timezone = "EST",
+    name: PrayerName = None,
+    prayer: Prayer = Depends(get_pt),
+    threshold: float = 1.5,
 ):
-    now = datetime.now().time()
+    now = datetime.now(pytz.timezone(timezone.value)).time()
     if name:
         return is_close(now, getattr(prayer, f"{name}_time")(), threshold)
-    return any(is_close(now, getattr(prayer, f"{name}_time")(), threshold) for name in PrayerName)
+    return any(
+        is_close(now, getattr(prayer, f"{name}_time")(), threshold)
+        for name in PrayerName
+    )
 
 
 @app.get("/is_adhan_time")
@@ -89,9 +99,10 @@ def is_adhan_time(
     """return true if the its adhan time else false"""
     return is_prayer_time_close
 
+
 @app.get("/show_adhan_times")
 def show_adhan_times(
     prayer: Prayer = Depends(get_pt),
 ) -> dict:
     """Call this API to see at what times the adhan will be triggered"""
-    return {name: getattr(prayer, name+"_time")() for name in PrayerName}
+    return {name: getattr(prayer, name + "_time")() for name in PrayerName}

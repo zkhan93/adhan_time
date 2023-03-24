@@ -11,6 +11,7 @@ python = "^3.10"
 fastapi = "^0.95.0"
 islam = "^2.2.0"
 uvicorn = "^0.21.1"
+pytz = "^2022.7.1"
 
 
 [tool.poetry.group.dev.dependencies]
