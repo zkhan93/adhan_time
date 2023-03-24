@@ -9,7 +9,7 @@ COPY poetry.lock pyproject.toml /code/
 RUN poetry config virtualenvs.create false --local && \
   poetry install --no-root --no-interaction --no-ansi --without=dev
 COPY . /code/
-EXPOSE 80
+EXPOSE 8044
 ENTRYPOINT ["/code/scripts/run.sh"]
 
 FROM prod as dev

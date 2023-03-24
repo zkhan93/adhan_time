@@ -35,7 +35,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push fh-server release
+      - name: Build and push adhantime release
         uses: docker/build-push-action@v3.2.0
         with:
           context: .

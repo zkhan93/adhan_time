@@ -4,4 +4,4 @@ services:
   adhan_time:
     image: ghcr.io/zkhan93/adhantime:latest
     ports:
-      - 8084:80
+      - 8084:8084
