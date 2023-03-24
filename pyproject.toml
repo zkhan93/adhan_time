@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "prayer-times"
+version = "0.1.0"
+description = ""
+authors = ["Zeeshan Khan <zkhan1093@gmail.com>"]
+readme = "README.md"
+packages = [{include = "prayer_times"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.95.0"
+islam = "^2.2.0"
+uvicorn = "^0.21.1"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
