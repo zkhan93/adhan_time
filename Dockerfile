@@ -1,5 +1,9 @@
 FROM python:3.10-slim-bullseye as prod
 ENV PYHTONUNBUFFERED=1
+RUN apt-get update -q \
+  && apt-get install --no-install-recommends -qy \
+  gcc \ 
+  && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip && pip install poetry
 
