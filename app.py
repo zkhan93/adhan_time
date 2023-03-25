@@ -7,11 +7,11 @@ import pytz
 app = FastAPI()
 
 
-def is_close(a, b, threshold=2):
+def is_close(a, b, threshold=1):
     dt_a = datetime.combine(date.today(), a)
     dt_b = datetime.combine(date.today(), b)
     diff = dt_a - dt_b
-    diff_minutes = abs(diff.total_seconds()) // 60
+    diff_minutes = abs(diff.total_seconds()) / 60
     return diff_minutes <= threshold
 
 
@@ -81,7 +81,7 @@ def is_prayer_time_close(
     timezone: Timezone = "EST",
     name: PrayerName = None,
     prayer: Prayer = Depends(get_pt),
-    threshold: float = 1.5,
+    threshold: float = 1,
 ):
     now = datetime.now(pytz.timezone(timezone.value)).time()
     if name:
