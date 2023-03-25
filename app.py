@@ -55,7 +55,7 @@ class AsrModel(str, Enum):
 
 asr_fiqh_map = {AsrModel.jomhor: 1, AsrModel.hanafi: 2}
 
-Timezone = Enum("Timezone", {t: t for t in pytz.common_timezones})
+Timezone = Enum("Timezone", {t: t for t in pytz.all_timezones})
 
 
 def get_pt(
