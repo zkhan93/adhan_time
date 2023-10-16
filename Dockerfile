@@ -15,4 +15,5 @@ EXPOSE 8084
 ENTRYPOINT ["/code/scripts/run.sh"]
 
 FROM prod as dev
-RUN poetry install --no-root --no-interaction --no-ansi
+RUN poetry config virtualenvs.create false --local && \
+  poetry install --no-root --no-interaction --no-ansi --with=dev

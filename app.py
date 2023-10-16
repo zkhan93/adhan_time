@@ -1,10 +1,33 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.responses import FileResponse
 from enum import Enum
 from pyIslam.praytimes import PrayerConf, Prayer, LIST_FAJR_ISHA_METHODS
 from datetime import date, datetime
 import pytz
+from pathlib import Path
 
-app = FastAPI()
+app = FastAPI(
+    title="Adhan API",
+    description="API to check if its adhan time",
+    version="0.0.1",
+    docs_url="/docs",
+)
+base_path = Path("/code")
+
+
+@app.get("/")
+async def index():
+    return FileResponse(base_path / Path("public/index.html"))
+    
+
+@app.get("/assets/{file_name:path}")
+async def assets(file_name: str):
+    final_path = base_path / Path("public/assets/" + file_name)
+    # make sure resolved final_path is under base_path
+    if str(final_path).startswith(str(base_path)):
+        return FileResponse(final_path)
+    else:
+        return HTTPException(status_code=404)
 
 
 def is_close(a, b, threshold=1):
@@ -59,14 +82,31 @@ Timezone = Enum("Timezone", {t: t for t in pytz.all_timezones})
 
 
 def get_pt(
-    timezone: Timezone = "EST",
-    longitude: float = -81.374417,
-    latitude: float = 19.290800,
+    timezone: Timezone,
+    longitude: float,
+    latitude: float,
     fajr_isha_method: Methods = Methods.one,
     asr_fiqh: AsrModel = AsrModel.jomhor,
 ) -> Prayer:
-    now = datetime.now(pytz.timezone(timezone.value))
-    hours = now.utcoffset().total_seconds() / 60 / 60
+    # TODO: use Google Zone API to get the daylight savings offset
+    # curl "https://maps.googleapis.com/maps/api/timezone/json?location={longitude},-{latitude}&timestamp={utc_now}&key=YOUR_API_KEY"
+    # {
+    #    "dstOffset" : 0,
+    #    "rawOffset" : 0,
+    #    "status" : "OK",
+    #    "timeZoneId" : "Europe/London",
+    #    "timeZoneName" : "Greenwich Mean Time"
+    # }
+    # now = datetime.now(pytz.timezone(timezone.value))
+    # hours = now.utcoffset().total_seconds() / 60 / 60
+
+    # Use the timezone object to localize the current time
+    tz = pytz.timezone(timezone.value)
+    localized_now = tz.localize(datetime.now())
+
+    # Calculate the offset, taking DST into account
+    hours = localized_now.utcoffset().total_seconds() / 3600
+    # TODO: validate the longitude and latitude
     prayer_conf = PrayerConf(
         longitude,
         latitude,
@@ -78,7 +118,7 @@ def get_pt(
 
 
 def is_prayer_time_close(
-    timezone: Timezone = "EST",
+    timezone: Timezone,
     name: PrayerName = None,
     prayer: Prayer = Depends(get_pt),
     threshold: float = 1,
